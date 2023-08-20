@@ -1,0 +1,6 @@
+Customisable Bus App
+
+LTA Datamall API Key:
+bo0YfOywSgyZ3vZbKaRDFw==
+
+note: when running app, make sure to connect mobile device to same wifi network as desktop / laptop (prevent network response timed out error)
