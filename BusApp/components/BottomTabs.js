@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { StyleSheet } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createMaterialBottomTabNavigator } from "@react-navigation/material-bottom-tabs";
@@ -22,7 +23,7 @@ export default function BottomTabs() {
                     elevation: 0, // remove top box shadow on android
                 },
                 tabBarActiveTintColor: '#72AFE1',
-                tabBarBackground: () => <BlurView tint='light' intensity={100} style={StyleSheet.absoluteFill}/>
+                tabBarBackground: () => <BlurView tint='light' intensity={100} style={StyleSheet.absoluteFill} />
             }}
             initialRouteName="Home">
             <Tab.Screen
