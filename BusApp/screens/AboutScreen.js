@@ -1,12 +1,13 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from "react-native";
 
 export default function AboutScreen(){
     return (
-        <View style={styles.main}>
+        <SafeAreaView style={styles.main}>
             <Text>About Screen</Text>
             <StatusBar styles='auto' />
-        </View>
+        </SafeAreaView>
     )
 }
 

@@ -18,6 +18,8 @@ export default function BottomTabs() {
                 tabBarShowLabel: false,
                 tabBarStyle: {
                     position: 'absolute',
+                    borderTopWidth: 0,
+                    elevation: 0, // remove top box shadow on android
                 },
                 tabBarActiveTintColor: '#72AFE1',
                 tabBarBackground: () => <BlurView tint='light' intensity={100} style={StyleSheet.absoluteFill}/>
