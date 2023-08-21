@@ -2,16 +2,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, FlatList, TouchableOpacity, ScrollView } from "react-native";
 import { useFonts, Rubik_400Regular } from '@expo-google-fonts/dev';
-import { useState, useEffect, useRef } from 'react';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useState, useEffect } from 'react';
 import * as Location from 'expo-location';
 import Constants from 'expo-constants';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 
 import BUS_STOP_DATA from '../assets/bus_stops.json';
-import { LTA_API_KEY } from '@env';
 import useCalcLatLongDist from '../hooks/useCalcLatLongDist';
+import BusStopItem from '../components/BusStopItem';
 
 
 export default function HomeScreen() {
+
+    const tabBarHeight = useBottomTabBarHeight();
 
     let [fontsLoaded] = useFonts({
         Rubik_400Regular,
@@ -50,42 +54,51 @@ export default function HomeScreen() {
         })();
     }, [locStatus]);
 
+    async function initNearBusStops() {
+        console.log('My Location: ', location);
+
+        if (!location) {
+            console.log('no location: ', location);
+            setLocation(await getLocation());
+            return;
+        };
+
+        let nbs = BUS_STOP_DATA.value
+            .map((bstop, i) => {
+                let { Latitude: stopLat, Longitude: stopLon } = bstop;
+                let { latitude, longitude } = location.coords;
+                let dist = useCalcLatLongDist(stopLat, stopLon, latitude, longitude);
+                if (dist < 0.5) {
+                    return {
+                        bstop,
+                        dist: Math.floor(dist * 1000),
+                    }
+                }
+
+                return false
+            })
+            .filter(bstop => bstop)
+            .sort((b1, b2) => b1.dist - b2.dist);
+
+        console.log('NBS: ', nbs);
+
+        setNearBusStops(nbs);
+    }
     useEffect(() => {
         (async () => {
-            console.log('My Location: ', location);
-
-            if (!location) {
-                console.log('no location: ', location);
-                setLocation(await getLocation());
-                return;
-            };
-
-            let nbs = BUS_STOP_DATA.value
-                .map((bstop, i) => {
-                    let { Latitude: stopLat, Longitude: stopLon } = bstop;
-                    let { latitude, longitude } = location.coords;
-                    let dist = useCalcLatLongDist(stopLat, stopLon, latitude, longitude);
-                    if (dist < 0.5) {
-                        return {
-                            bstop,
-                            dist: Math.floor(dist * 1000),
-                        }
-                    }
-
-                    return false
-                })
-                .filter(bstop => bstop)
-                .sort((b1, b2) => b1.dist - b2.dist);
-
-            console.log('NBS: ', nbs);
-
-            setNearBusStops(nbs);
+            await initNearBusStops();
         })();
     }, [location]);
 
     return (
         <ScrollView>
-            <SafeAreaView style={styles.main}>
+            <SafeAreaView style={{
+                flex: 1,
+                alignItems: 'center',
+                justifyContent: 'flex-start',
+                paddingBottom: tabBarHeight + 250,
+                backgroundColor: '#fff',
+            }}>
 
                 <View style={{
                     width: '100%',
@@ -94,9 +107,9 @@ export default function HomeScreen() {
                     paddingHorizontal: 16,
                 }}>
                     <Text style={{
-                        fontSize: 30,
-                        fontWeight: 'bold',
                         fontFamily: fontsLoaded ? 'Rubik_400Regular' : 'Roboto',
+                        fontSize: 30,
+                        // fontWeight: 'bold',
                     }}>
                         Nearby
                     </Text>
@@ -113,24 +126,7 @@ export default function HomeScreen() {
 
                             <FlatList
                                 data={nearBusStops}
-                                renderItem={({ item }) => {
-                                    return (
-                                        <TouchableOpacity style={{
-                                            flex: 1,
-                                            flexDirection: 'column',
-                                            paddingHorizontal: 10,
-                                            paddingVertical: 10,
-                                            margin: 1,
-                                            borderRadius: 5,
-                                            backgroundColor: '#ddd',
-                                        }}>
-                                            <Text style={{
-                                                fontSize: 20,
-                                                fontFamily: fontsLoaded ? 'Rubik_400Regular' : 'Roboto',
-                                            }}>{item.bstop.Description}</Text>
-                                        </TouchableOpacity>
-                                    )
-                                }}
+                                renderItem={({ item, index }) => <BusStopItem {...item}/>}
                                 keyExtractor={(item, i) => i}
                                 numColumns={1}
                                 scrollEnabled={false} />
@@ -150,14 +146,3 @@ export default function HomeScreen() {
         </ScrollView>
     )
 }
-
-const styles = StyleSheet.create({
-    main: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'flex-start',
-        marginBottom: Constants.statusBarHeight,
-        overflow: 'scroll',
-    },
-
-});

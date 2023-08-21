@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { StyleSheet } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createMaterialBottomTabNavigator } from "@react-navigation/material-bottom-tabs";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons, AntDesign } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 
 import HomeScreen from '../screens/HomeScreen';
@@ -30,20 +30,20 @@ export default function BottomTabs() {
                 name='Home'
                 component={HomeScreen}
                 options={{
-                    tabBarIcon: ({ color }) => <MaterialCommunityIcons name='home' size={26} color={color} />,
+                    tabBarIcon: ({ color }) => <AntDesign name='home' size={22} color={color} />,
                 }} />
             <Tab.Screen
                 name='Fav'
                 component={FavScreen}
                 options={{
-                    tabBarIcon: ({ color }) => <MaterialCommunityIcons name='heart' size={26} color={color} />,
+                    tabBarIcon: ({ color }) => <AntDesign name='hearto' size={22} color={color} />,
                 }} />
-            <Tab.Screen
+            {/* <Tab.Screen
                 name='About'
                 component={AboutScreen}
                 options={{
                     tabBarIcon: ({ color }) => <MaterialCommunityIcons name='progress-question' size={26} color={color} />,
-                }} />
+                }} /> */}
         </Tab.Navigator>
     )
 }

@@ -1,13 +1,16 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
+import AppContext from './context/GlobalContext';
 
 import BottomTabs from './components/BottomTabs';
 
 export default function App() {
 	return (
-		<NavigationContainer>
-			<BottomTabs />
-		</NavigationContainer>
+		<AppContext>
+			<NavigationContainer>
+				<BottomTabs />
+			</NavigationContainer>
+		</AppContext>
 	);
 }
 
