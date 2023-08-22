@@ -3,19 +3,20 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, FlatList, TouchableOpacity, ScrollView } from "react-native";
 import { useFonts, Rubik_400Regular } from '@expo-google-fonts/dev';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import * as Location from 'expo-location';
 import Constants from 'expo-constants';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 
 import BUS_STOP_DATA from '../assets/bus_stops.json';
 import useCalcLatLongDist from '../hooks/useCalcLatLongDist';
 import BusStopItem from '../components/BusStopItem';
+import Screen from '../components/Screen';
+import { useGlobalContext } from '../context/GlobalContext';
 
 
 export default function HomeScreen() {
 
-    const tabBarHeight = useBottomTabBarHeight();
+    const { theme } = useGlobalContext();
 
     let [fontsLoaded] = useFonts({
         Rubik_400Regular,
@@ -25,6 +26,8 @@ export default function HomeScreen() {
     const [location, setLocation] = useState(null);
 
     const [nearBusStops, setNearBusStops] = useState([]);
+
+    const [expandedBusStopCode, setExpandedBusStopCode] = useState(null);
 
     async function getLocStatus() {
         let { status } = await Location.requestForegroundPermissionsAsync();
@@ -91,58 +94,56 @@ export default function HomeScreen() {
     }, [location]);
 
     return (
-        <ScrollView>
-            <SafeAreaView style={{
-                flex: 1,
+        <Screen>
+            <View style={{
+                flexDirection: 'row',
                 alignItems: 'center',
-                justifyContent: 'flex-start',
-                paddingBottom: tabBarHeight + 250,
-                backgroundColor: '#fff',
+                width: '100%',
+                // backgroundColor: 'cyan',
+                paddingTop: 20,
+                paddingBottom: 10,
+                paddingHorizontal: 16,
             }}>
-
-                <View style={{
-                    width: '100%',
-                    // backgroundColor: 'cyan',
-                    paddingVertical: 10,
-                    paddingHorizontal: 16,
+                <MaterialCommunityIcons name='bus' size={40} color={theme != 'dark' ? 'black' : 'white'}/>
+                <Text style={{
+                    fontFamily: fontsLoaded ? 'Rubik_400Regular' : 'Roboto',
+                    fontSize: 30,
+                    color: theme != 'dark' ? 'black' : 'white',
+                    marginLeft: 8,
                 }}>
-                    <Text style={{
-                        fontFamily: fontsLoaded ? 'Rubik_400Regular' : 'Roboto',
-                        fontSize: 30,
-                        // fontWeight: 'bold',
-                    }}>
-                        Nearby
-                    </Text>
-                </View>
+                    Nearby
+                </Text>
+            </View>
 
-                <View style={{
-                    width: '100%',
-                    // backgroundColor: 'cyan',
-                    paddingVertical: 10,
-                    paddingHorizontal: 16,
-                }}>
-                    {
-                        nearBusStops.length > 0 ?
+            <View style={{
+                width: '100%',
+                // backgroundColor: 'cyan',
+                paddingVertical: 10,
+                paddingHorizontal: 16,
+            }}>
+                {
+                    nearBusStops.length > 0 ?
 
-                            <FlatList
-                                data={nearBusStops}
-                                renderItem={({ item, index }) => <BusStopItem {...item}/>}
-                                keyExtractor={(item, i) => i}
-                                numColumns={1}
-                                scrollEnabled={false} />
+                        <FlatList
+                            data={nearBusStops}
+                            renderItem={({ item, index }) =>
+                                <BusStopItem
+                                    {...item}
+                                    expandedBusStopCode={expandedBusStopCode}
+                                    setExpandedBusStopCode={setExpandedBusStopCode} />}
+                            keyExtractor={(item, i) => i}
+                            numColumns={1}
+                            scrollEnabled={false} />
 
-                            : location ?
+                        : location ?
 
-                                <Text>No bus stops near you :"(</Text>
+                            <Text>No bus stops near you :"(</Text>
 
-                                :
+                            :
 
-                                <Text>Turn on location to view nearby bus stops!</Text>
-                    }
-                </View>
-
-                <StatusBar style='auto' />
-            </SafeAreaView>
-        </ScrollView>
+                            <Text>Turn on location to view nearby bus stops!</Text>
+                }
+            </View>
+        </Screen>
     )
 }

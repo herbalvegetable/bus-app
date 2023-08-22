@@ -1,20 +1,11 @@
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from "react-native";
+
+import Screen from '../components/Screen';
 
 export default function FavScreen(){
     return (
-        <SafeAreaView style={styles.main}>
+        <Screen>
             <Text>Favourites Screen</Text>
-            <StatusBar style='auto' />
-        </SafeAreaView>
+        </Screen>
     )
 }
-
-const styles = StyleSheet.create({
-    main: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-});

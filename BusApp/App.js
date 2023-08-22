@@ -1,15 +1,18 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import AppContext from './context/GlobalContext';
+import { ToastProvider } from 'react-native-toast-notifications';
 
 import BottomTabs from './components/BottomTabs';
 
 export default function App() {
 	return (
 		<AppContext>
-			<NavigationContainer>
-				<BottomTabs />
-			</NavigationContainer>
+			<ToastProvider>
+				<NavigationContainer>
+					<BottomTabs />
+				</NavigationContainer>
+			</ToastProvider>
 		</AppContext>
 	);
 }

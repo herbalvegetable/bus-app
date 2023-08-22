@@ -6,9 +6,13 @@ export const useGlobalContext = () => useContext(GlobalContext);
 
 export default function AppContext({ children }) {
 
+    const [theme, setTheme] = useState('light');
+
     return (
         <GlobalContext.Provider
-            value={{}}>
+            value={{
+                theme, setTheme,
+            }}>
             {children}
         </GlobalContext.Provider>
     )
