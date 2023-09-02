@@ -13,7 +13,7 @@ const scrollOptions = {
     align: 'center',
 }
 
-export default function Screen({ children }) {
+export default function Screen({ onRefreshEvent, children }) {
 
     const { theme } = useGlobalContext();
 
@@ -22,9 +22,13 @@ export default function Screen({ children }) {
     const [refreshing, setRefreshing] = useState(false);
     const onRefresh = useCallback(() => {
         setRefreshing(true);
+
+        onRefreshEvent(setRefreshing);
+
         setTimeout(() => {
+            console.log('Refresh timed out');
             setRefreshing(false);
-        }, 2000);
+        }, 30000);
     }, []);
 
     return (
@@ -32,7 +36,7 @@ export default function Screen({ children }) {
             <CustomScrollView
                 scrollIntoViewOptions={scrollOptions}
                 refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh}/>
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
                 }>
                 <SafeAreaView style={{
                     flex: 1,

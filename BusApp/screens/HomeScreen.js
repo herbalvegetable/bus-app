@@ -46,14 +46,18 @@ export default function HomeScreen() {
         return loc;
     }
 
+    async function initLocation() {
+        if (locStatus) {
+            console.log('YAYY LOCSTATUS', locStatus);
+            setLocation(await getLocation());
+        };
+
+        setLocStatus(await getLocStatus());
+    }
+
     useEffect(() => {
         (async () => {
-            if (locStatus) {
-                console.log('YAYY LOCSTATUS', locStatus);
-                setLocation(await getLocation());
-            };
-
-            setLocStatus(await getLocStatus());
+            await initLocation();
         })();
     }, [locStatus]);
 
@@ -89,12 +93,21 @@ export default function HomeScreen() {
     }
     useEffect(() => {
         (async () => {
+            console.log('init near bus stops');
             await initNearBusStops();
         })();
     }, [location]);
 
+    useEffect(() => {
+        console.log('NBS LEN: ', nearBusStops.length, nearBusStops.length > 0);
+    }, [nearBusStops]);
+
     return (
-        <Screen>
+        <Screen onRefreshEvent={async setRefreshing => {
+            await initLocation();
+            console.log(setRefreshing);
+            setRefreshing(false); // code could be better
+        }}>
             <View style={{
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -104,7 +117,7 @@ export default function HomeScreen() {
                 paddingBottom: 10,
                 paddingHorizontal: 16,
             }}>
-                <MaterialCommunityIcons name='bus' size={40} color={theme != 'dark' ? 'black' : 'white'}/>
+                <MaterialCommunityIcons name='bus' size={40} color={theme != 'dark' ? 'black' : 'white'} />
                 <Text style={{
                     fontFamily: fontsLoaded ? 'Rubik_400Regular' : 'Roboto',
                     fontSize: 30,
@@ -131,7 +144,7 @@ export default function HomeScreen() {
                                     {...item}
                                     expandedBusStopCode={expandedBusStopCode}
                                     setExpandedBusStopCode={setExpandedBusStopCode} />}
-                            keyExtractor={(item, i) => i}
+                            keyExtractor={(item, i) => i.toString()}
                             numColumns={1}
                             scrollEnabled={false} />
 

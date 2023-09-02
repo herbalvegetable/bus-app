@@ -11,7 +11,6 @@ import useCalcLatLongDist from '../hooks/useCalcLatLongDist';
 import useCalcTimeDiff from '../hooks/useCalcTimeDiff';
 import testData from '../assets/test_bus_service.json';
 import { useGlobalContext } from '../context/GlobalContext';
-import { Swipeable } from 'react-native-gesture-handler';
 
 export default function BusStopItem(props) {
 
@@ -75,76 +74,48 @@ export default function BusStopItem(props) {
             });
     }
 
-    const LeftSwipeActions = () => {
-        return (
-            <View style={{
-                flex: 1,
-                paddingHorizontal: 20,
-                alignItems: 'flex-start',
-                justifyContent: 'center',
-            }}>
-                {/* <Text style={{
-                    color: theme != 'dark' ? 'black' : 'white',
-                }}>Favourite</Text> */}
-                <AntDesign name='hearto' size={22} color={theme != 'dark' ? 'black' : 'white'} />
-            </View>
-        )
-    }
-    const RightSwipeActions = () => {
-
-    }
-    const swipeOpen = direction => {
-        console.log('Swipe from', direction);
-        swipeableRef.current.close();
-
-        toast.show(`Added ${bstop.Description} to Favourites`);
-    }
-    const swipeableRef = useRef();
-
     return (
-        <Swipeable
-            ref={swipeableRef}
-            friction={2}
-            leftThreshold={80}
-            renderLeftActions={LeftSwipeActions}
-            onSwipeableOpen={swipeOpen}>
-            <TouchableOpacity
-                onPress={e => {
-                    console.log('EXPAND', bstop.BusStopCode);
-                    // setExpanded(true);
-                    setExpanded(!expanded);
+        <TouchableOpacity
+            style={{
+                flexDirection: 'row',
+                marginTop: expanded ? 20 : 0,
+                marginBottom: expanded ? 30 : 10,
+                backgroundColor: theme != 'dark' ? '#D6F5FF' : '#1D3C5E'
+            }}
+            onPress={e => {
+                console.log('EXPAND', bstop.BusStopCode);
+                // setExpanded(true);
+                setExpanded(!expanded);
+            }}>
+            <View
+                ref={mainRef}
+                style={{
+                    flex: 1,
+                    flexDirection: 'column',
+                    paddingHorizontal: 10,
+                    paddingTop: 15,
+                    paddingBottom: 5,
+                    borderTopLeftRadius: 5,
+                    borderBottomLeftRadius: 5,
                 }}>
-                <View
-                    ref={mainRef}
-                    style={{
-                        flex: 1,
-                        flexDirection: 'column',
-                        paddingHorizontal: 10,
-                        paddingTop: 15,
-                        paddingBottom: 5,
-                        marginTop: expanded ? 20 : 0,
-                        marginBottom: expanded ? 30 : 10,
-                        borderRadius: 5,
-                        backgroundColor: theme != 'dark' ? '#D6F5FF' : '#1D3C5E',
-                    }}>
-                    <Text style={{
-                        fontSize: 20,
-                        // fontWeight: 'bold',
-                        fontFamily: !fontsLoaded ? 'Roboto' : expanded ? 'Rubik_600SemiBold' : 'Rubik_400Regular',
-                        marginBottom: 5,
-                        color: theme != 'dark' ? 'black' : 'white',
-                    }}>
-                        {bstop.Description}
-                    </Text>
-                    <Text style={{
-                        fontSize: 16,
-                        fontFamily: fontsLoaded ? 'Rubik_400Regular' : 'Roboto',
-                        color: theme != 'dark' ? 'gray' : 'lightgray',
-                    }}>
-                        {dist}m away
-                    </Text>
-                    {
-                        !services ?
+                <Text style={{
+                    fontSize: 20,
+                    // fontWeight: 'bold',
+                    fontFamily: !fontsLoaded ? 'Roboto' : expanded ? 'Rubik_600SemiBold' : 'Rubik_400Regular',
+                    marginBottom: 5,
+                    color: theme != 'dark' ? 'black' : 'white',
+                }}>
+                    {bstop.Description}
+                </Text>
+                <Text style={{
+                    fontSize: 16,
+                    fontFamily: fontsLoaded ? 'Rubik_400Regular' : 'Roboto',
+                    color: theme != 'dark' ? 'gray' : 'lightgray',
+                }}>
+                    {dist}m away
+                </Text>
+                {
+                    !services ?
 
                         <Text>Loading bus services...</Text>
 
@@ -327,11 +298,25 @@ export default function BusStopItem(props) {
                             <View style={{
                                 paddingVertical: 5,
                             }}>
-                                <MaterialCommunityIcons name='sleep' size={30} color={'#3688BF'}/>
+                                <MaterialCommunityIcons name='sleep' size={30} color={'#3688BF'} />
                             </View>
-                    }
+                }
+            </View>
+            <TouchableOpacity
+                onPress={e => {
+                    e.stopPropagation();
+                }}>
+                <View style={{
+                    width: 40,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    // backgroundColor: 'pink',
+                    borderTopRightRadius: 5,
+                    borderBottomRightRadius: 5,
+                }}>
+                    <AntDesign name='hearto' size={22} color={'#000'} />
                 </View>
             </TouchableOpacity>
-        </Swipeable>
+        </TouchableOpacity>
     )
 }
