@@ -4,6 +4,7 @@ import { StyleSheet, Text, View, FlatList, TouchableOpacity, ScrollView } from "
 import { useFonts, Rubik_400Regular } from '@expo-google-fonts/dev';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useState, useEffect, useCallback } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import Constants from 'expo-constants';
 
@@ -55,12 +56,6 @@ export default function HomeScreen() {
         setLocStatus(await getLocStatus());
     }
 
-    useEffect(() => {
-        (async () => {
-            await initLocation();
-        })();
-    }, [locStatus]);
-
     async function initNearBusStops() {
         console.log('My Location: ', location);
 
@@ -91,16 +86,54 @@ export default function HomeScreen() {
 
         setNearBusStops(nbs);
     }
-    useEffect(() => {
-        (async () => {
-            console.log('init near bus stops');
-            await initNearBusStops();
-        })();
-    }, [location]);
+
+    // useEffect(() => {
+    //     (async () => {
+    //         await initLocation();
+    //     })();
+    // }, [locStatus]);
+
+    // useEffect(() => {
+    //     (async () => {
+    //         console.log('init near bus stops');
+    //         await initNearBusStops();
+    //     })();
+    // }, [location]);
+
+    // useEffect(() => {
+    //     console.log('NBS LEN: ', nearBusStops.length, nearBusStops.length > 0);
+    // }, [nearBusStops]);
+
 
     useEffect(() => {
-        console.log('NBS LEN: ', nearBusStops.length, nearBusStops.length > 0);
-    }, [nearBusStops]);
+        (async () => {
+            await updateFavouriteBusStops();
+
+            console.log('NBS LEN: ', nearBusStops.length, nearBusStops.length > 0);
+
+            if(location){
+                console.log('init near bus stops');
+                await initNearBusStops();
+            }
+            else if(locStatus){
+                await initLocation();
+            }
+        })();
+    }, [locStatus, location]);
+
+    const [favBusStops, setFavBusStops] = useState([]);
+    // Update favourited bus stops
+    async function updateFavouriteBusStops(){
+        const favDataStr = await AsyncStorage.getItem('favData');
+
+        if(favDataStr !== null){
+            let favData = JSON.parse(favDataStr);
+            setFavBusStops(favData.busStops);
+        }
+        else{
+
+        }
+    }
 
     return (
         <Screen onRefreshEvent={async setRefreshing => {
@@ -141,9 +174,13 @@ export default function HomeScreen() {
                             data={nearBusStops}
                             renderItem={({ item, index }) =>
                                 <BusStopItem
+                                    type={'home'}
                                     {...item}
                                     expandedBusStopCode={expandedBusStopCode}
-                                    setExpandedBusStopCode={setExpandedBusStopCode} />}
+                                    setExpandedBusStopCode={setExpandedBusStopCode} 
+                                    updateFavouriteBusStops={updateFavouriteBusStops}
+                                    favourited={favBusStops.includes(item.bstop.BusStopCode)}/>
+                            }
                             keyExtractor={(item, i) => i.toString()}
                             numColumns={1}
                             scrollEnabled={false} />

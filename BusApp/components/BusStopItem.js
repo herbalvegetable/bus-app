@@ -5,6 +5,7 @@ import { MaterialCommunityIcons, FontAwesome, AntDesign } from '@expo/vector-ico
 import axios from 'axios';
 import { useScrollIntoView } from 'react-native-scroll-into-view';
 import { useToast } from "react-native-toast-notifications";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { LTA_API_KEY } from '@env';
 import useCalcLatLongDist from '../hooks/useCalcLatLongDist';
@@ -12,7 +13,7 @@ import useCalcTimeDiff from '../hooks/useCalcTimeDiff';
 import testData from '../assets/test_bus_service.json';
 import { useGlobalContext } from '../context/GlobalContext';
 
-export default function BusStopItem(props) {
+export default function BusStopItem({ type, bstop, dist, expandedBusStopCode, setExpandedBusStopCode, updateFavouriteBusStops, favourited }) {
 
     const { theme } = useGlobalContext();
     const toast = useToast();
@@ -23,8 +24,6 @@ export default function BusStopItem(props) {
     });
     const scrollIntoView = useScrollIntoView();
     const mainRef = useRef();
-
-    const { bstop, dist, expandedBusStopCode, setExpandedBusStopCode } = props;
 
     const [expanded, setExpanded] = useState(false);
     useEffect(() => {
@@ -72,6 +71,56 @@ export default function BusStopItem(props) {
                 console.log(err);
                 fetchServicesData(bscode);
             });
+    }
+
+
+    // ADD TO FAVOURITES LIST (async storage)
+    async function addFavourite(){
+
+        // Reset fav data
+        // await AsyncStorage.setItem('favData', JSON.stringify({
+        //     busStops: [],
+        // }));
+
+        try{
+            // Key: "favData"
+            const favDataStr = await AsyncStorage.getItem('favData');
+            if(favDataStr !== null){
+
+                let favData = JSON.parse(favDataStr);
+                if(favData.busStops.includes(bstop.BusStopCode)){
+                    // Remove from favourites
+                    favData.busStops.splice(favData.busStops.indexOf(bstop.BusStopCode), 1);
+                    await AsyncStorage.setItem('favData', JSON.stringify(favData));
+
+                    await updateFav();
+                    toast.show(`Removed ${bstop.Description} from favourites`);
+                    return;
+                }
+                favData.busStops = [...favData.busStops, bstop.BusStopCode];
+
+                await AsyncStorage.setItem('favData', JSON.stringify(favData));
+
+                // toast.show(`Favourited ${bstop.Description}: ${bstop.BusStopCode}`);
+                await updateFav();
+                toast.show(`Favourited ${bstop.Description}`);
+            }
+            else{
+                await AsyncStorage.setItem('favData', JSON.stringify({
+                    busStops: [],
+                }));
+                addFavourite();
+            }
+        }
+        catch(err){
+            console.log(err);
+        }
+    }
+
+    async function updateFav(){
+        // update upon new favdata
+        console.log('NEW FAVDATA: ', await AsyncStorage.getItem('favData'));
+        await updateFavouriteBusStops();
     }
 
     return (
@@ -303,18 +352,22 @@ export default function BusStopItem(props) {
                 }
             </View>
             <TouchableOpacity
-                onPress={e => {
+                onPress={async e => {
                     e.stopPropagation();
+
+                    await addFavourite();
                 }}>
                 <View style={{
+                    flex: 1,
                     width: 40,
+                    height: 'fit-content',
                     alignItems: 'center',
                     justifyContent: 'center',
                     // backgroundColor: 'pink',
                     borderTopRightRadius: 5,
                     borderBottomRightRadius: 5,
                 }}>
-                    <AntDesign name='hearto' size={22} color={'#000'} />
+                    <AntDesign name={favourited ? 'heart' : 'hearto'} size={22} color={favourited ? '#c7183b' : '#000'} />
                 </View>
             </TouchableOpacity>
         </TouchableOpacity>
