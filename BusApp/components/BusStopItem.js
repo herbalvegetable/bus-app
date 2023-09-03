@@ -75,20 +75,20 @@ export default function BusStopItem({ type, bstop, dist, expandedBusStopCode, se
 
 
     // ADD TO FAVOURITES LIST (async storage)
-    async function addFavourite(){
+    async function addFavourite() {
 
         // Reset fav data
         // await AsyncStorage.setItem('favData', JSON.stringify({
         //     busStops: [],
         // }));
 
-        try{
+        try {
             // Key: "favData"
             const favDataStr = await AsyncStorage.getItem('favData');
-            if(favDataStr !== null){
+            if (favDataStr !== null) {
 
                 let favData = JSON.parse(favDataStr);
-                if(favData.busStops.includes(bstop.BusStopCode)){
+                if (favData.busStops.includes(bstop.BusStopCode)) {
                     // Remove from favourites
                     favData.busStops.splice(favData.busStops.indexOf(bstop.BusStopCode), 1);
                     await AsyncStorage.setItem('favData', JSON.stringify(favData));
@@ -105,19 +105,19 @@ export default function BusStopItem({ type, bstop, dist, expandedBusStopCode, se
                 await updateFav();
                 toast.show(`Favourited ${bstop.Description}`);
             }
-            else{
+            else {
                 await AsyncStorage.setItem('favData', JSON.stringify({
                     busStops: [],
                 }));
                 addFavourite();
             }
         }
-        catch(err){
+        catch (err) {
             console.log(err);
         }
     }
 
-    async function updateFav(){
+    async function updateFav() {
         // update upon new favdata
         console.log('NEW FAVDATA: ', await AsyncStorage.getItem('favData'));
         await updateFavouriteBusStops();
@@ -354,7 +354,6 @@ export default function BusStopItem({ type, bstop, dist, expandedBusStopCode, se
             <TouchableOpacity
                 onPress={async e => {
                     e.stopPropagation();
-
                     await addFavourite();
                 }}>
                 <View style={{

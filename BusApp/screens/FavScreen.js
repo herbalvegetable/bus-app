@@ -4,6 +4,7 @@ import { StyleSheet, Text, View, FlatList, TouchableOpacity, ScrollView } from "
 import { useFonts, Rubik_400Regular } from '@expo-google-fonts/dev';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useState, useEffect, useCallback } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import Constants from 'expo-constants';
 
@@ -41,16 +42,55 @@ export default function FavScreen() {
         return loc;
     }
 
+    async function initLocation() {
+        if (locStatus) {
+            console.log('YAYY LOCSTATUS', locStatus);
+            setLocation(await getLocation());
+        };
+
+        setLocStatus(await getLocStatus());
+    }
+
+    const [favBusStops, setFavBusStops] = useState([]);
+
+    async function initFavData() {
+        const favDataStr = await AsyncStorage.getItem('favData');
+        if (favDataStr !== null) {
+            let favData = JSON.parse(favDataStr);
+            
+            console.log(favData.busStops);
+            setFavBusStops(BUS_STOP_DATA.value.filter((bstop, i) => {
+                return favData.busStops.includes(bstop.BusStopCode);
+            }));
+        }
+        else {
+            await AsyncStorage.setItem('favData', JSON.stringify({
+                busStops: [],
+            }));
+        }
+    }
+
     useEffect(() => {
         (async () => {
-            if (locStatus) {
-                console.log('YAYY LOCSTATUS', locStatus);
-                setLocation(await getLocation());
-            };
-
-            setLocStatus(await getLocStatus());
+            await initFavData();
+            await initLocation();
         })();
     }, [locStatus]);
+
+    const [expandedBusStopCode, setExpandedBusStopCode] = useState(null);
+
+    // Update favourited bus stops
+    async function updateFavouriteBusStops(){
+        const favDataStr = await AsyncStorage.getItem('favData');
+
+        if(favDataStr !== null){
+            let favData = JSON.parse(favDataStr);
+            setFavBusStops(favData.busStops);
+        }
+        else{
+
+        }
+    }
 
     return (
         <Screen>
@@ -73,6 +113,28 @@ export default function FavScreen() {
                     Favourites
                 </Text>
             </View>
+            {
+                favBusStops.length > 0 ?
+
+                    <FlatList
+                        data={favBusStops}
+                        renderItem={({ item, index }) =>
+                            <BusStopItem
+                                type={'fav'}
+                                {...item}
+                                expandedBusStopCode={expandedBusStopCode}
+                                setExpandedBusStopCode={setExpandedBusStopCode}
+                                updateFavouriteBusStops={updateFavouriteBusStops}
+                                favourited={true} />
+                        }
+                        keyExtractor={(item, i) => i.toString()}
+                        numColumns={1}
+                        scrollEnabled={false} />
+
+                    :
+
+                    <Text>No favourited bus stops</Text>
+            }
         </Screen>
     )
 }
