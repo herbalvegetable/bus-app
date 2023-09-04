@@ -58,7 +58,7 @@ export default function FavScreen() {
         if (favDataStr !== null) {
             let favData = JSON.parse(favDataStr);
             
-            console.log(favData.busStops);
+            console.log('FAVBUSSTOPS', favData.busStops);
             setFavBusStops(BUS_STOP_DATA.value.filter((bstop, i) => {
                 return favData.busStops.includes(bstop.BusStopCode);
             }));
@@ -93,7 +93,10 @@ export default function FavScreen() {
     }
 
     return (
-        <Screen>
+        <Screen onRefreshEvent={async setRefreshing => {
+            await initFavData();
+            setRefreshing(false); //placeholder
+        }}>
             <View style={{
                 flexDirection: 'row',
                 alignItems: 'center',
