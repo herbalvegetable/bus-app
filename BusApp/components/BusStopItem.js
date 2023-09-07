@@ -13,7 +13,7 @@ import useCalcTimeDiff from '../hooks/useCalcTimeDiff';
 import testData from '../assets/test_bus_service.json';
 import { useGlobalContext } from '../context/GlobalContext';
 
-export default function BusStopItem({ type, bstop, dist, expandedBusStopCode, setExpandedBusStopCode, updateFavouriteBusStops, favourited }) {
+export default function BusStopItem({ type, bstop, dist, expandedBusStopCode, setExpandedBusStopCode, updateFavouriteBusStops, favourited, favServices }) {
 
     const { theme } = useGlobalContext();
     const toast = useToast();
@@ -25,9 +25,9 @@ export default function BusStopItem({ type, bstop, dist, expandedBusStopCode, se
     const scrollIntoView = useScrollIntoView();
     const mainRef = useRef();
 
-    const [expanded, setExpanded] = useState(false);
+    const [expanded, setExpanded] = useState(type === 'fav');
     useEffect(() => {
-        if (expandedBusStopCode != bstop.BusStopCode) {
+        if (type !== 'fav' && expandedBusStopCode != bstop.BusStopCode) {
             setExpanded(false);
         }
     }, [expandedBusStopCode])
@@ -60,7 +60,12 @@ export default function BusStopItem({ type, bstop, dist, expandedBusStopCode, se
         axios.get(`http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2?BusStopCode=${bscode}`, config)
             .then(res => {
                 console.log(bscode, res.data);
-                setServices(res.data.Services);
+
+                let servs = res.data.Services;
+
+                setServices(type !== 'fav' ? servs : servs.filter((s => {
+                    return favServices.includes(s.ServiceNo);
+                })));
 
                 scrollIntoView(mainRef.current);
 
@@ -73,76 +78,20 @@ export default function BusStopItem({ type, bstop, dist, expandedBusStopCode, se
             });
     }
 
-
-    // ADD TO FAVOURITES LIST (async storage)
-    async function updateFav(bsservices) {
-        /*
-        if bsservices = [187, 188, 947, 985], add services listed
-        if bsservices == [], remove all
-        if bsservices == null, add all
-        */
-        
-        // Reset fav data
-        // await AsyncStorage.setItem('favData', JSON.stringify({
-        //     busStops: [],
-        // }));
-
-        try {
-            const favDataStr = await AsyncStorage.getItem('favData');
-            if (favDataStr !== null) {
-
-                let favData = JSON.parse(favDataStr);
-                if (favData.busStops.includes(bstop.BusStopCode)) {
-
-                    // Remove from favourites
-                    favData.busStops.splice(favData.busStops.indexOf(bstop.BusStopCode), 1);
-                    await AsyncStorage.setItem('favData', JSON.stringify(favData));
-                    
-                    // update upon new favdata
-                    console.log('NEW FAVDATA: ', await AsyncStorage.getItem('favData'));
-                    await updateFavouriteBusStops();
-                    
-                    toast.show(`Removed ${bstop.Description} from favourites`);
-                    return;
-                }
-
-                // Add to favourites
-                favData.busStops = [...favData.busStops, bstop.BusStopCode];
-
-                await AsyncStorage.setItem('favData', JSON.stringify(favData));
-
-                // toast.show(`Favourited ${bstop.Description}: ${bstop.BusStopCode}`);
-
-                // update upon new favdata
-                console.log('NEW FAVDATA: ', await AsyncStorage.getItem('favData'));
-                await updateFavouriteBusStops();
-
-                toast.show(`Favourited ${bstop.Description}`);
-            }
-            else {
-                await AsyncStorage.setItem('favData', JSON.stringify({
-                    busStops: [],
-                }));
-                updateFav();
-            }
-        }
-        catch (err) {
-            console.log(err);
-        }
-    }
-
     return (
         <TouchableOpacity
             style={{
                 flexDirection: 'row',
-                marginTop: expanded ? 20 : 0,
-                marginBottom: expanded ? 30 : 10,
+                marginTop: type === 'fav' ? 0 : expanded ? 20 : 0,
+                marginBottom: type === 'fav' ? 0 : expanded ? 30 : 10,
                 backgroundColor: theme != 'dark' ? '#D6F5FF' : '#1D3C5E'
             }}
             onPress={e => {
                 console.log('EXPAND', bstop.BusStopCode);
                 // setExpanded(true);
-                setExpanded(!expanded);
+                if(type !== 'fav'){
+                    setExpanded(!expanded);
+                }
             }}>
             <View
                 ref={mainRef}
@@ -202,7 +151,12 @@ export default function BusStopItem({ type, bstop, dist, expandedBusStopCode, se
 
                             <TouchableOpacity onPress={async e => {
                                 e.stopPropagation();
-                                await updateFav();
+                                await updateFavouriteBusStops(
+                                    favourited ? 'remove' : 'add', 
+                                    bstop.BusStopCode, 
+                                    services.map(s => s.ServiceNo),
+                                    bstop.Description,
+                                );
                             }}>
                                 <View style={{
                                     flex: 1,
@@ -359,8 +313,14 @@ export default function BusStopItem({ type, bstop, dist, expandedBusStopCode, se
                                                                     })
                                                                 }
                                                             </View>
-                                                            <TouchableOpacity onPress={e => {
+                                                            <TouchableOpacity onPress={async e => {
                                                                 e.stopPropagation();
+                                                                await updateFavouriteBusStops(
+                                                                    favServices?.includes(ServiceNo) ? 'remove' : 'add',
+                                                                    bstop.BusStopCode,
+                                                                    [ServiceNo],
+                                                                    bstop.Description,
+                                                                );
                                                             }}>
                                                                 <View style={{
                                                                     flex: 1,
@@ -368,7 +328,10 @@ export default function BusStopItem({ type, bstop, dist, expandedBusStopCode, se
                                                                     justifyContent: 'center',
                                                                     // backgroundColor: 'pink',
                                                                 }}>
-                                                                    <AntDesign name={favourited ? 'heart' : 'hearto'} size={22} color={favourited ? '#c7183b' : '#000'} />
+                                                                    <AntDesign 
+                                                                        name={favServices?.includes(ServiceNo) ? 'heart' : 'hearto'} 
+                                                                        size={22} 
+                                                                        color={favServices?.includes(ServiceNo) ? '#c7183b' : '#000'} />
                                                                 </View>
                                                             </TouchableOpacity>
                                                         </TouchableOpacity>
@@ -431,7 +394,12 @@ export default function BusStopItem({ type, bstop, dist, expandedBusStopCode, se
                     <TouchableOpacity
                         onPress={async e => {
                             e.stopPropagation();
-                            await updateFav();
+                            await updateFavouriteBusStops(
+                                favourited ? 'remove' : 'add', 
+                                bstop.BusStopCode, 
+                                services.map(s => s.ServiceNo),
+                                bstop.Description,
+                            );
                         }}>
                         <View style={{
                             flex: 1,

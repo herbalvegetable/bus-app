@@ -13,6 +13,7 @@ import useCalcLatLongDist from '../hooks/useCalcLatLongDist';
 import BusStopItem from '../components/BusStopItem';
 import Screen from '../components/Screen';
 import { useGlobalContext } from '../context/GlobalContext';
+import useUpdateFavBusStops from '../hooks/useUpdateFavBusStops';
 
 export default function FavScreen() {
 
@@ -57,43 +58,52 @@ export default function FavScreen() {
         const favDataStr = await AsyncStorage.getItem('favData');
         if (favDataStr !== null) {
             let favData = JSON.parse(favDataStr);
-            
-            console.log('FAVBUSSTOPS', favData.busStops);
-            setFavBusStops(BUS_STOP_DATA.value.filter((bstop, i) => {
-                return favData.busStops.includes(bstop.BusStopCode);
-            }));
+
+            console.log('FAVDATA: ', favData);
+            setFavBusStops(
+                BUS_STOP_DATA.value
+                    .filter((bstop, i) => {
+                        return bstop.BusStopCode in favData;
+                    })
+                    .map((bstop, i) => {
+                        let { Latitude: stopLat, Longitude: stopLon } = bstop;
+                        let dist = '-';
+                        if (location) {
+                            let { latitude, longitude } = location.coords;
+                            dist = Math.floor(useCalcLatLongDist(stopLat, stopLon, latitude, longitude) * 1000);
+                        }
+                        return {
+                            bstop,
+                            dist,
+                            favServices: favData[bstop.BusStopCode],
+                        }
+                    })
+            );
         }
         else {
-            await AsyncStorage.setItem('favData', JSON.stringify({
-                busStops: [],
-            }));
+            await AsyncStorage.setItem('favData', JSON.stringify({}));
+            await initFavData();
         }
     }
 
     useEffect(() => {
         (async () => {
+            console.log('LOCATION: ', location);
+            if (locStatus) {
+                await initLocation();
+            }
             await initFavData();
-            await initLocation();
         })();
-    }, [locStatus]);
+    }, [locStatus, location]);
 
     const [expandedBusStopCode, setExpandedBusStopCode] = useState(null);
 
     // Update favourited bus stops
-    async function updateFavouriteBusStops(){
-        const favDataStr = await AsyncStorage.getItem('favData');
-
-        if(favDataStr !== null){
-            let favData = JSON.parse(favDataStr);
-            setFavBusStops(favData.busStops);
-        }
-        else{
-
-        }
-    }
+    const updateFavouriteBusStops = useUpdateFavBusStops(setFavBusStops);
 
     return (
         <Screen onRefreshEvent={async setRefreshing => {
+            console.log(location, favBusStops);
             await initFavData();
             setRefreshing(false); //placeholder
         }}>
@@ -116,28 +126,40 @@ export default function FavScreen() {
                     Favourites
                 </Text>
             </View>
-            {
-                favBusStops.length > 0 ?
+            <View style={{
+                width: '100%',
+                // backgroundColor: 'cyan',
+                paddingVertical: 10,
+                paddingHorizontal: 16,
+            }}>
+                {
+                    favBusStops.length > 0 ?
 
-                    <FlatList
-                        data={favBusStops}
-                        renderItem={({ item, index }) =>
-                            <BusStopItem
-                                type={'fav'}
-                                {...item}
-                                expandedBusStopCode={expandedBusStopCode}
-                                setExpandedBusStopCode={setExpandedBusStopCode}
-                                updateFavouriteBusStops={updateFavouriteBusStops}
-                                favourited={true} />
-                        }
-                        keyExtractor={(item, i) => i.toString()}
-                        numColumns={1}
-                        scrollEnabled={false} />
+                        <FlatList
+                            data={favBusStops}
+                            renderItem={({ item, index }) => {
+                                // console.log('FAVBSITEM: ', item);
+                                return <BusStopItem
+                                    type={'fav'}
+                                    {...item}
+                                    expandedBusStopCode={true}
+                                    setExpandedBusStopCode={setExpandedBusStopCode}
+                                    updateFavouriteBusStops={updateFavouriteBusStops}
+                                    favourited={true} />
+                            }}
+                            keyExtractor={(item, i) => i.toString()}
+                            numColumns={1}
+                            scrollEnabled={false} />
 
-                    :
+                        : location ?
 
-                    <Text>No favourited bus stops</Text>
-            }
+                            <Text>Location not found</Text>
+
+                            :
+
+                            <Text>No favourited bus stops</Text>
+                }
+            </View>
         </Screen>
     )
 }
