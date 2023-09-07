@@ -75,52 +75,60 @@ export default function BusStopItem({ type, bstop, dist, expandedBusStopCode, se
 
 
     // ADD TO FAVOURITES LIST (async storage)
-    async function addFavourite() {
-
+    async function updateFav(bsservices) {
+        /*
+        if bsservices = [187, 188, 947, 985], add services listed
+        if bsservices == [], remove all
+        if bsservices == null, add all
+        */
+        
         // Reset fav data
         // await AsyncStorage.setItem('favData', JSON.stringify({
         //     busStops: [],
         // }));
 
         try {
-            // Key: "favData"
             const favDataStr = await AsyncStorage.getItem('favData');
             if (favDataStr !== null) {
 
                 let favData = JSON.parse(favDataStr);
                 if (favData.busStops.includes(bstop.BusStopCode)) {
+
                     // Remove from favourites
                     favData.busStops.splice(favData.busStops.indexOf(bstop.BusStopCode), 1);
                     await AsyncStorage.setItem('favData', JSON.stringify(favData));
-
-                    await updateFav();
+                    
+                    // update upon new favdata
+                    console.log('NEW FAVDATA: ', await AsyncStorage.getItem('favData'));
+                    await updateFavouriteBusStops();
+                    
                     toast.show(`Removed ${bstop.Description} from favourites`);
                     return;
                 }
+
+                // Add to favourites
                 favData.busStops = [...favData.busStops, bstop.BusStopCode];
 
                 await AsyncStorage.setItem('favData', JSON.stringify(favData));
 
                 // toast.show(`Favourited ${bstop.Description}: ${bstop.BusStopCode}`);
-                await updateFav();
+
+                // update upon new favdata
+                console.log('NEW FAVDATA: ', await AsyncStorage.getItem('favData'));
+                await updateFavouriteBusStops();
+
                 toast.show(`Favourited ${bstop.Description}`);
             }
             else {
                 await AsyncStorage.setItem('favData', JSON.stringify({
                     busStops: [],
                 }));
-                addFavourite();
+                updateFav();
             }
         }
         catch (err) {
             console.log(err);
         }
-    }
-
-    async function updateFav() {
-        // update upon new favdata
-        console.log('NEW FAVDATA: ', await AsyncStorage.getItem('favData'));
-        await updateFavouriteBusStops();
     }
 
     return (
@@ -147,22 +155,69 @@ export default function BusStopItem({ type, bstop, dist, expandedBusStopCode, se
                     borderTopLeftRadius: 5,
                     borderBottomLeftRadius: 5,
                 }}>
-                <Text style={{
-                    fontSize: 20,
-                    // fontWeight: 'bold',
-                    fontFamily: !fontsLoaded ? 'Roboto' : expanded ? 'Rubik_600SemiBold' : 'Rubik_400Regular',
-                    marginBottom: 5,
-                    color: theme != 'dark' ? 'black' : 'white',
+                <View style={{
+                    flex: 1,
+                    flexDirection: 'row',
+                    // backgroundColor: 'beige',
+                    justifyContent: 'space-between',
+                    marginBottom: expanded ? 15 : 0,
                 }}>
-                    {bstop.Description}
-                </Text>
-                <Text style={{
-                    fontSize: 16,
-                    fontFamily: fontsLoaded ? 'Rubik_400Regular' : 'Roboto',
-                    color: theme != 'dark' ? 'gray' : 'lightgray',
-                }}>
-                    {dist}m away
-                </Text>
+                    <View style={{
+                        flexDirection: 'column',
+                    }}>
+                        <Text style={{
+                            fontSize: 20,
+                            // fontWeight: 'bold',
+                            fontFamily: !fontsLoaded ? 'Roboto' : expanded ? 'Rubik_600SemiBold' : 'Rubik_400Regular',
+                            marginBottom: 5,
+                            color: theme != 'dark' ? 'black' : 'white',
+                        }}>
+                            {bstop.Description}
+                        </Text>
+                        <Text style={{
+                            fontSize: 16,
+                            fontFamily: fontsLoaded ? 'Rubik_400Regular' : 'Roboto',
+                            color: theme != 'dark' ? 'gray' : 'lightgray',
+                        }}>
+                            {dist}m away
+                        </Text>
+                        {/* {
+                            expanded ?
+
+                                <Text style={{
+                                    fontSize: 16,
+                                    fontFamily: fontsLoaded ? 'Rubik_400Regular' : 'Roboto',
+                                    fontStyle: 'italic',
+                                    color: theme != 'dark' ? 'gray' : 'lightgray',
+                                    marginTop: 5,
+                                }}>
+                                    {bstop.BusStopCode}
+                                </Text>
+
+                                : null
+                        } */}
+                    </View>
+                    {
+                        expanded ?
+
+                            <TouchableOpacity onPress={async e => {
+                                e.stopPropagation();
+                                await updateFav();
+                            }}>
+                                <View style={{
+                                    flex: 1,
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'flex-start',
+                                    // backgroundColor: 'pink',
+                                }}>
+                                    <AntDesign name={favourited ? 'heart' : 'hearto'} size={22} color={favourited ? '#c7183b' : '#000'} />
+                                </View>
+                            </TouchableOpacity>
+
+                            : null
+                    }
+                </View>
                 {
                     !services ?
 
@@ -205,7 +260,7 @@ export default function BusStopItem({ type, bstop, dist, expandedBusStopCode, se
                                                                 // backgroundColor: 'beige',
                                                                 // paddingHorizontal: 10,
                                                                 paddingLeft: 5,
-                                                                marginRight: 10,
+                                                                // marginRight: 10,
                                                             }}>
                                                                 <Text style={{
                                                                     fontSize: 24,
@@ -216,6 +271,9 @@ export default function BusStopItem({ type, bstop, dist, expandedBusStopCode, se
                                                             <View style={{
                                                                 flex: 4,
                                                                 flexDirection: 'row',
+                                                                // backgroundColor: 'cyan',
+                                                                paddingLeft: 2,
+                                                                paddingRight: 2,
                                                             }}>
                                                                 {
                                                                     busList.map((bus, i) => {
@@ -301,6 +359,18 @@ export default function BusStopItem({ type, bstop, dist, expandedBusStopCode, se
                                                                     })
                                                                 }
                                                             </View>
+                                                            <TouchableOpacity onPress={e => {
+                                                                e.stopPropagation();
+                                                            }}>
+                                                                <View style={{
+                                                                    flex: 1,
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center',
+                                                                    // backgroundColor: 'pink',
+                                                                }}>
+                                                                    <AntDesign name={favourited ? 'heart' : 'hearto'} size={22} color={favourited ? '#c7183b' : '#000'} />
+                                                                </View>
+                                                            </TouchableOpacity>
                                                         </TouchableOpacity>
                                                     )
                                                 })
@@ -351,24 +421,32 @@ export default function BusStopItem({ type, bstop, dist, expandedBusStopCode, se
                             </View>
                 }
             </View>
-            <TouchableOpacity
-                onPress={async e => {
-                    e.stopPropagation();
-                    await addFavourite();
-                }}>
-                <View style={{
-                    flex: 1,
-                    width: 40,
-                    height: 'fit-content',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    // backgroundColor: 'pink',
-                    borderTopRightRadius: 5,
-                    borderBottomRightRadius: 5,
-                }}>
-                    <AntDesign name={favourited ? 'heart' : 'hearto'} size={22} color={favourited ? '#c7183b' : '#000'} />
-                </View>
-            </TouchableOpacity>
+            {
+                expanded ?
+
+                    null
+
+                    :
+
+                    <TouchableOpacity
+                        onPress={async e => {
+                            e.stopPropagation();
+                            await updateFav();
+                        }}>
+                        <View style={{
+                            flex: 1,
+                            width: 40,
+                            // height: 'fit-content',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            // backgroundColor: 'pink',
+                            borderTopRightRadius: 5,
+                            borderBottomRightRadius: 5,
+                        }}>
+                            <AntDesign name={favourited ? 'heart' : 'hearto'} size={22} color={favourited ? '#c7183b' : '#000'} />
+                        </View>
+                    </TouchableOpacity>
+            }
         </TouchableOpacity>
     )
 }
