@@ -1,10 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useToast } from 'react-native-toast-notifications';
+import { useGlobalContext } from '../context/GlobalContext';
 
 export default function useUpdateFavBusStops(setFavBusStops) {
 
+    const { setUpdatingFavData } = useGlobalContext();
+
     const toast = useToast();
-    
+
     // Update favourited bus stops
     return async (type, bscode, bsservices, bsdesc) => {
         /*
@@ -62,15 +65,18 @@ export default function useUpdateFavBusStops(setFavBusStops) {
             console.log(err);
         }
 
+        setUpdatingFavData([]);
+
         // 2. Update favourite bus stops list (useState)
-        const favDataStr = await AsyncStorage.getItem('favData');
+        // const favDataStr = await AsyncStorage.getItem('favData');
 
-        if (favDataStr !== null) {
-            let favData = JSON.parse(favDataStr);
-            setFavBusStops(favData);
-        }
-        else {
+        // if (favDataStr !== null) {
+        //     let favData = JSON.parse(favDataStr);
+        //     setUpdatingFavData([]);
+        //     setFavBusStops(favData);
+        // }
+        // else {
 
-        }
+        // }
     }
 }

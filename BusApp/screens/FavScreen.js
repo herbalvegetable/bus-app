@@ -17,7 +17,7 @@ import useUpdateFavBusStops from '../hooks/useUpdateFavBusStops';
 
 export default function FavScreen() {
 
-    const { theme } = useGlobalContext();
+    const { theme, updatingFavData, setUpdatingFavData } = useGlobalContext();
 
     let [fontsLoaded] = useFonts({
         Rubik_400Regular,
@@ -100,6 +100,20 @@ export default function FavScreen() {
 
     // Update favourited bus stops
     const updateFavouriteBusStops = useUpdateFavBusStops(setFavBusStops);
+
+    useEffect(() => {
+        console.log('FAV CTX FAVDATA: ', updatingFavData);
+        (async () => {
+            const favDataStr = await AsyncStorage.getItem('favData');
+
+            if (favDataStr !== null && !updatingFavData.includes('fav')) {
+                let favData = JSON.parse(favDataStr);
+                await initFavData();
+                
+                setUpdatingFavData([...updatingFavData, 'fav']);
+            }
+        })();
+    }, [updatingFavData]);
 
     return (
         <Screen onRefreshEvent={async setRefreshing => {

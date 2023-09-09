@@ -8,7 +8,10 @@ import BottomTabs from './components/BottomTabs';
 export default function App() {
 	return (
 		<AppContext>
-			<ToastProvider>
+			<ToastProvider
+				duration={2500}
+				animationType='zoom-in'
+				offsetBottom={50}>
 				<NavigationContainer>
 					<BottomTabs />
 				</NavigationContainer>

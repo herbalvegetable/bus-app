@@ -18,7 +18,7 @@ import useUpdateFavBusStops from '../hooks/useUpdateFavBusStops';
 
 export default function HomeScreen() {
 
-    const { theme } = useGlobalContext();
+    const { theme, updatingFavData, setUpdatingFavData } = useGlobalContext();
 
     const toast = useToast();
 
@@ -90,24 +90,6 @@ export default function HomeScreen() {
         setNearBusStops(nbs);
     }
 
-    // useEffect(() => {
-    //     (async () => {
-    //         await initLocation();
-    //     })();
-    // }, [locStatus]);
-
-    // useEffect(() => {
-    //     (async () => {
-    //         console.log('init near bus stops');
-    //         await initNearBusStops();
-    //     })();
-    // }, [location]);
-
-    // useEffect(() => {
-    //     console.log('NBS LEN: ', nearBusStops.length, nearBusStops.length > 0);
-    // }, [nearBusStops]);
-
-
     useEffect(() => {
         (async () => {
             await updateFavouriteBusStops();
@@ -124,79 +106,24 @@ export default function HomeScreen() {
         })();
     }, [locStatus, location]);
 
-    
+
     const [favBusStops, setFavBusStops] = useState([]);
-    
+
     const updateFavouriteBusStops = useUpdateFavBusStops(setFavBusStops);
 
-    // Update favourited bus stops
-    // async function updateFavouriteBusStops(type, bscode, bsservices, bsdesc) {
-    //     /*
-    //     type!: 'add', 'remove', 'removeAll'
-    //     bscode!: e.g. 43467 
-    //     bsservices: e.g. [187, 188]
+    useEffect(() => {
+        console.log('HOME CTX FAVDATA: ', updatingFavData);
+        (async () => {
+            const favDataStr = await AsyncStorage.getItem('favData');
 
-    //     favData = {
-    //         43467: [187, 188, 947, 985]
-    //     }
-    //     */
-
-    //     // 1. Perform add/remove operation
-    //     try {
-    //         const favDataStr = await AsyncStorage.getItem('favData');
-    //         if (favDataStr !== null) {
-
-    //             let favData = JSON.parse(favDataStr);
-
-    //             if (favData[bscode] === undefined) {
-    //                 favData[bscode] = [];
-    //             }
-
-    //             switch (type) {
-    //                 case 'add':
-    //                     favData[bscode] = [...new Set([...favData[bscode], ...bsservices])];
-    //                     toast.show(`❤️ ${bsservices.join(', ')} from ${bsdesc}`);
-    //                     break;
-
-    //                 case 'remove':
-    //                     // console.log('REMOVE LIST: ', bsservices);
-    //                     for (var service of bsservices) {
-    //                         // console.log('REM: ', favData[bscode], service, favData[bscode].indexOf(service));
-    //                         favData[bscode].splice(favData[bscode].indexOf(service), 1);
-    //                     }
-    //                     toast.show(`- ${bsservices.join(', ')} from ${bsdesc}`);
-
-    //                     if (favData[bscode].length <= 0) {
-    //                         delete favData[bscode];
-    //                         toast.show(`Removed ${bsdesc} from favourites`);
-    //                     }
-    //                     break;
-    //             }
-
-    //             await AsyncStorage.setItem('favData', JSON.stringify(favData));
-    //             console.log('NEW FAVDATA: ', await AsyncStorage.getItem('favData'));
-    //         }
-    //         else {
-    //             // init favdata and reexecute function
-    //             await AsyncStorage.setItem('favData', JSON.stringify({}));
-    //             await updateFavouriteBusStops(type, bscode, bsservices, bsdesc);
-    //         }
-    //     }
-    //     catch (err) {
-    //         console.log(err);
-    //     }
-
-    //     // 2. Update favourite bus stops list (useState)
-    //     const favDataStr = await AsyncStorage.getItem('favData');
-
-    //     if (favDataStr !== null) {
-    //         let favData = JSON.parse(favDataStr);
-    //         setFavBusStops(favData);
-    //     }
-    //     else {
-
-    //     }
-    // }
+            if (favDataStr !== null && !updatingFavData.includes('home')) {
+                let favData = JSON.parse(favDataStr);
+                setFavBusStops(favData);
+                
+                setUpdatingFavData([...updatingFavData, 'home']);
+            }
+        })();
+    }, [updatingFavData]);
 
     return (
         <Screen onRefreshEvent={async setRefreshing => {
