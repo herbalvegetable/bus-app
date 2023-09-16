@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, ScrollView, RefreshControl } from "react-native";
@@ -43,6 +44,7 @@ export default function Screen({ onRefreshEvent, children }) {
                     alignItems: 'center',
                     justifyContent: 'flex-start',
                     paddingBottom: tabBarHeight + 100,
+                    minHeight: Dimensions.get('window').height,
                     backgroundColor: theme != 'dark' ? '#fff' : '#13283E',
                 }}>
                     {children}
