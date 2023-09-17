@@ -26,7 +26,7 @@ export default function HomeScreen() {
         Rubik_400Regular,
     });
 
-    const [locStatus, setLocStatus] = useState(null);
+    const [locationStatus, setLocationStatus] = useState(null);
     const [location, setLocation] = useState(null);
 
     const [nearBusStops, setNearBusStops] = useState([]);
@@ -34,36 +34,18 @@ export default function HomeScreen() {
     const [expandedBusStopCode, setExpandedBusStopCode] = useState(null);
 
     async function getLocStatus() {
-        let { status } = await Location.requestForegroundPermissionsAsync();
-        console.log('GETTING LOC STATUS', status);
-        return status;
+        return (await Location.requestForegroundPermissionsAsync()).status;
     }
 
     async function getLocation() {
-        if (locStatus !== 'granted') {
-            console.log('Permission to access location was denied');
-            console.log('LOCSTATUS', locStatus);
-            return;
-        }
-
-        let loc = await Location.getCurrentPositionAsync();
-        return loc;
+        return await Location.getCurrentPositionAsync();
     }
 
-    async function initLocation() {
-        if (locStatus) {
-            console.log('YAYY LOCSTATUS', locStatus);
-            setLocation(await getLocation());
-        };
+    async function initNearBusStops(loc) {
+        console.log('My Location: ', loc);
 
-        setLocStatus(await getLocStatus());
-    }
-
-    async function initNearBusStops() {
-        console.log('My Location: ', location);
-
-        if (!location) {
-            console.log('no location: ', location);
+        if (!loc) {
+            console.log('no location: ', loc);
             setLocation(await getLocation());
             return;
         };
@@ -71,7 +53,7 @@ export default function HomeScreen() {
         let nbs = BUS_STOP_DATA.value
             .map((bstop, i) => {
                 let { Latitude: stopLat, Longitude: stopLon } = bstop;
-                let { latitude, longitude } = location.coords;
+                let { latitude, longitude } = loc.coords;
                 let dist = useCalcLatLongDist(stopLat, stopLon, latitude, longitude);
                 if (dist < 0.5) {
                     return {
@@ -92,19 +74,28 @@ export default function HomeScreen() {
 
     useEffect(() => {
         (async () => {
-            await updateFavouriteBusStops();
-
-            console.log('NBS LEN: ', nearBusStops.length, nearBusStops.length > 0);
-
-            if (location) {
-                console.log('init near bus stops');
-                await initNearBusStops();
-            }
-            else if (locStatus) {
-                await initLocation();
-            }
+            await initHome();
         })();
-    }, [locStatus, location]);
+    }, []);
+
+    async function initHome() {
+        const locStatus = await getLocStatus();
+
+        let loc;
+
+        if (!locStatus) {
+            console.log('INITHOME - no loc status :*(', locStatus);
+            return;
+        };
+
+        console.log('INITHOME - Loc status: ', locStatus);
+        loc = await getLocation();
+        setLocation(loc);
+
+        initNearBusStops(loc);
+
+        await updateFavouriteBusStops();
+    }
 
 
     const [favBusStops, setFavBusStops] = useState([]);
@@ -112,6 +103,7 @@ export default function HomeScreen() {
     const updateFavouriteBusStops = useUpdateFavBusStops(setFavBusStops);
 
     useEffect(() => {
+        console.log();
         console.log('HOME CTX FAVDATA: ', updatingFavData);
         (async () => {
             const favDataStr = await AsyncStorage.getItem('favData');
@@ -119,7 +111,7 @@ export default function HomeScreen() {
             if (favDataStr !== null && !updatingFavData.includes('home')) {
                 let favData = JSON.parse(favDataStr);
                 setFavBusStops(favData);
-                
+
                 setUpdatingFavData([...updatingFavData, 'home']);
             }
         })();
@@ -127,8 +119,9 @@ export default function HomeScreen() {
 
     return (
         <Screen onRefreshEvent={async setRefreshing => {
-            await initLocation();
-            console.log(setRefreshing);
+            // await initLocation();
+            await initHome();
+            console.log('REFRESHREFRESHREFRESHREFRESHREFRESHREFRESHREFRESHREFRESH');
             setRefreshing(false); // code could be better
         }}>
             <View style={{
@@ -184,7 +177,7 @@ export default function HomeScreen() {
 
                             :
 
-                            <Text>Turn on location to view nearby bus stops!</Text>
+                            <Text style={{ fontSize: 16 }}>Turn on location to view nearby bus stops!</Text>
                 }
             </View>
         </Screen>

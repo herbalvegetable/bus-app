@@ -171,7 +171,7 @@ export default function FavScreen() {
 
                             :
 
-                            <Text>No favourited bus stops</Text>
+                            <Text style={{fontSize: 20}}>No favourited bus stops</Text>
                 }
             </View>
         </Screen>

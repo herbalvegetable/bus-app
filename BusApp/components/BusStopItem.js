@@ -67,7 +67,9 @@ export default function BusStopItem({ type, bstop, dist, expandedBusStopCode, se
                     return favServices.includes(s.ServiceNo);
                 })));
 
-                scrollIntoView(mainRef.current);
+                if(expanded){
+                    scrollIntoView(mainRef.current);
+                }
 
                 // TESTING AT NIGHT ZZZZZZZZ
                 // setServices(testData.Services);

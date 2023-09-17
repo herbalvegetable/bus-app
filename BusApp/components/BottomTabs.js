@@ -8,6 +8,7 @@ import { BlurView } from "expo-blur";
 import HomeScreen from '../screens/HomeScreen';
 import FavScreen from "../screens/FavScreen";
 import AboutScreen from '../screens/AboutScreen';
+import SearchScreen from "../screens/SearchScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -38,12 +39,12 @@ export default function BottomTabs() {
                 options={{
                     tabBarIcon: ({ color }) => <AntDesign name='hearto' size={22} color={color} />,
                 }} />
-            {/* <Tab.Screen
-                name='About'
-                component={AboutScreen}
+            <Tab.Screen
+                name='Search'
+                component={SearchScreen}
                 options={{
-                    tabBarIcon: ({ color }) => <MaterialCommunityIcons name='progress-question' size={26} color={color} />,
-                }} /> */}
+                    tabBarIcon: ({ color }) => <AntDesign name='search1' size={22} color={color} />,
+                }} />
         </Tab.Navigator>
     )
 }

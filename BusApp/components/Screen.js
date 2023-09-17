@@ -43,7 +43,7 @@ export default function Screen({ onRefreshEvent, children }) {
                     flex: 1,
                     alignItems: 'center',
                     justifyContent: 'flex-start',
-                    paddingBottom: tabBarHeight + 100,
+                    paddingBottom: tabBarHeight + 25,
                     minHeight: Dimensions.get('window').height,
                     backgroundColor: theme != 'dark' ? '#fff' : '#13283E',
                 }}>
